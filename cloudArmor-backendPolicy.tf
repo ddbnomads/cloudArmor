@@ -1,8 +1,8 @@
 terraform {
   required_providers {
     google = {
-      source = "hashicorp/google-beta"
-      version = "4.39.0"
+      source = "hashicorp/google"
+      version = "4.43.0"
     }
   }
 }
@@ -18,6 +18,12 @@ resource "google_compute_security_policy" "policy" {
   advanced_options_config {
       json_parsing = "STANDARD"
       log_level= "VERBOSE"
+  }
+  adaptive_protection_config {
+      layer_7_ddos_defense_config {
+          enable = true
+          rule_visibility = "STANDARD"
+      }
   }
     type = "CLOUD_ARMOR"
 
@@ -87,7 +93,7 @@ resource "google_compute_security_policy" "policy" {
     preview = true
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('php-v33-stable', {'sensitivity': 3})"
+        expression = "evaluatePreconfiguredWaf('php-v33-stable', {'sensitivity': 1})"
       }
     }
     description = "PHP - OWASP Rule"
@@ -99,7 +105,7 @@ resource "google_compute_security_policy" "policy" {
     preview = true
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('sqli-v33-stable', {'sensitivity': 4})"
+        expression = "evaluatePreconfiguredWaf('sqli-v33-stable', {'sensitivity': 1})"
       }
     }
     description = "SQLi - OWASP Rule"
@@ -111,7 +117,7 @@ resource "google_compute_security_policy" "policy" {
     preview = true
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('xss-v33-stable', {'sensitivity': 2})"
+        expression = "evaluatePreconfiguredWaf('xss-v33-stable', {'sensitivity': 1})"
       }
     }
     description = "XSS - OWASP Rule"
@@ -135,7 +141,7 @@ rule {
     preview = true
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('rfi-v33-stable', {'sensitivity': 2})"
+        expression = "evaluatePreconfiguredWaf('rfi-v33-stable', {'sensitivity': 1})"
       }
     }
     description = "RFI - OWASP Rule"
@@ -147,7 +153,7 @@ rule {
     preview = true
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('rce-v33-stable', {'sensitivity': 3})"
+        expression = "evaluatePreconfiguredWaf('rce-v33-stable', {'sensitivity': 1})"
       }
     }
     description = "RCE - OWASP Rule"
@@ -171,7 +177,7 @@ rule {
     preview = true
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('scannerdetection-v33-stable', {'sensitivity': 2})"
+        expression = "evaluatePreconfiguredWaf('scannerdetection-v33-stable', {'sensitivity': 1})"
       }
     }
     description = "Scanner Detection - OWASP Rule"
@@ -183,7 +189,7 @@ rule {
     preview = true
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('protocolattack-v33-stable', {'sensitivity': 3})"
+        expression = "evaluatePreconfiguredWaf('protocolattack-v33-stable', {'sensitivity': 1})"
       }
     }
     description = "Protocol Attack - OWASP Rule"
