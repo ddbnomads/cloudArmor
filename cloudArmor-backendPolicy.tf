@@ -110,6 +110,18 @@ resource "google_compute_security_policy" "policy" {
     }
     description = "SQLi - OWASP Rule"
   }
+  
+  rule {
+    action   = "deny(403)"
+    priority = "11100"
+    preview = true
+    match {
+      expr {
+        expression = "evaluatePreconfiguredWaf('json-sqli-canary', {'sensitivity':0, 'opt_in_rule_ids': ['owasp-crs-id942550-sqli']})"
+      }
+    }
+    description = "SQLi - JSON Synatx Bypass"
+  }
 
   rule {
     action   = "deny(403)"
