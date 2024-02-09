@@ -2,7 +2,7 @@ terraform {
   required_providers {
     google = {
       source = "hashicorp/google"
-      version = "5.11.0"
+      version = "5.15.0"
     }
   }
 }
@@ -39,28 +39,6 @@ resource "google_compute_security_policy" "policy" {
     }
     description = "Deny access to specific IP addresses"
   }
-
-    rule {
-    action   = "throttle"
-    priority = "3000"
-    preview = true
-    rate_limit_options {
-          enforce_on_key = "ALL"
-          conform_action = "allow"
-          exceed_action = "deny(429)"
-          rate_limit_threshold {
-              count = "100"
-              interval_sec = "60" 
-          }
-      }
-    match {
-      versioned_expr = "SRC_IPS_V1"
-      config {
-        src_ip_ranges = ["*"]
-      }
-    }
-    description = "Rate limit all user IPs"
-  }
    
    rule {
     action   = "allow"
@@ -81,7 +59,7 @@ resource "google_compute_security_policy" "policy" {
     preview = true
     match {
       expr {
-        expression = "origin.region_code == 'CN' && origin.region_code == 'RU'"
+        expression = "origin.region_code == 'CN' || origin.region_code == 'RU'"
       }
     }
     description = "Block users from specific countries"
@@ -111,18 +89,6 @@ resource "google_compute_security_policy" "policy" {
     description = "SQLi - OWASP Rule"
   }
   
-  rule {
-    action   = "deny(403)"
-    priority = "11100"
-    preview = true
-    match {
-      expr {
-        expression = "evaluatePreconfiguredWaf('json-sqli-canary', {'sensitivity':0, 'opt_in_rule_ids': ['owasp-crs-id942550-sqli']})"
-      }
-    }
-    description = "SQLi - JSON Synatx Bypass"
-  }
-
   rule {
     action   = "deny(403)"
     priority = "12000"
@@ -253,6 +219,28 @@ rule {
    }
    description = "Critical vulnerabilities rule"
  }
+
+  rule {
+    action   = "throttle"
+    priority = "30000"
+    preview = true
+    rate_limit_options {
+          enforce_on_key = "ALL"
+          conform_action = "allow"
+          exceed_action = "deny(429)"
+          rate_limit_threshold {
+              count = "300"
+              interval_sec = "60" 
+          }
+      }
+    match {
+      versioned_expr = "SRC_IPS_V1"
+      config {
+        src_ip_ranges = ["*"]
+      }
+    }
+    description = "Rate limit all user IPs"
+  }
 
   rule {
     action   = "allow"
