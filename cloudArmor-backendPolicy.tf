@@ -25,6 +25,7 @@ resource "google_compute_security_policy" "policy" {
           rule_visibility = "STANDARD"
       }
   }
+
     type = "CLOUD_ARMOR"
 
   rule {
@@ -112,18 +113,18 @@ resource "google_compute_security_policy" "policy" {
     }
     description = "LFI - OWASP Rule"
   }
-
-rule {
+  
+  rule {
     action   = "deny(403)"
-    priority = "14000"
-    preview = true
-    match {
-      expr {
-        expression = "evaluatePreconfiguredWaf('rfi-v33-stable', {'sensitivity': 1})"
-      }
+     priority = "14000"
+     preview = true
+     match {
+       expr {
+         expression = "evaluatePreconfiguredWaf('rfi-v33-stable', {'sensitivity': 1})"
+       }
+     }
+     description = "RFI - OWASP Rule"
     }
-    description = "RFI - OWASP Rule"
-  }
 
   rule {
     action   = "deny(403)"
@@ -161,96 +162,96 @@ rule {
     description = "Scanner Detection - OWASP Rule"
   }
 
-rule {
-    action   = "deny(403)"
-    priority = "18000"
-    preview = true
-    match {
-      expr {
-        expression = "evaluatePreconfiguredWaf('protocolattack-v33-stable', {'sensitivity': 1})"
-      }
-    }
-    description = "Protocol Attack - OWASP Rule"
-  }
-
   rule {
-    action   = "deny(403)"
-    priority = "19000"
-    preview = true
-    match {
-      expr {
-        expression = "evaluatePreconfiguredWaf('sessionfixation-v33-stable', {'sensitivity': 1})"
+      action   = "deny(403)"
+      priority = "18000"
+      preview = true
+      match {
+        expr {
+          expression = "evaluatePreconfiguredWaf('protocolattack-v33-stable', {'sensitivity': 1})"
+        }
       }
+      description = "Protocol Attack - OWASP Rule"
     }
-    description = "Session Fixation - OWASP Rule"
-  }
-rule {
-   action   = "deny(403)"
-   priority = "20000"
-   preview = true
-   match {
-     expr {
-       expression = "evaluatePreconfiguredWaf('nodejs-v33-stable', {'sensitivity': 1})"
-     }
-   }
-   description = "Node.js - OWASP Rule"
- }
 
-rule {
-   action   = "deny(403)"
-   priority = "21000"
-   preview = true
-   match {
-     expr {
-       expression = "evaluatePreconfiguredWaf('java-v33-stable', {'sensitivity': 3})"
-     }
-   }
-   description = "Java - OWASP Rule"
- }
-
- rule {
-   action   = "deny(403)"
-   priority = "22000"
-   preview = true
-   match {
-     expr {
-       expression = "evaluatePreconfiguredWaf('cve-canary', {'sensitivity': 3})"
-     }
-   }
-   description = "Critical vulnerabilities rule"
- }
-
-  rule {
-    action   = "throttle"
-    priority = "30000"
-    preview = true
-    rate_limit_options {
-          enforce_on_key = "ALL"
-          conform_action = "allow"
-          exceed_action = "deny(429)"
-          rate_limit_threshold {
-              count = "300"
-              interval_sec = "60" 
-          }
+    rule {
+      action   = "deny(403)"
+      priority = "19000"
+      preview = true
+      match {
+        expr {
+          expression = "evaluatePreconfiguredWaf('sessionfixation-v33-stable', {'sensitivity': 1})"
+        }
       }
-    match {
-      versioned_expr = "SRC_IPS_V1"
-      config {
-        src_ip_ranges = ["*"]
-      }
+      description = "Session Fixation - OWASP Rule"
     }
-    description = "Rate limit all user IPs"
-  }
+    rule {
+       action   = "deny(403)"
+       priority = "20000"
+       preview = true
+       match {
+         expr {
+           expression = "evaluatePreconfiguredWaf('nodejs-v33-stable', {'sensitivity': 1})"
+         }
+       }
+       description = "Node.js - OWASP Rule"
+     }
 
-  rule {
-    action   = "allow"
-    priority = "2147483647"
-    match {
-      versioned_expr = "SRC_IPS_V1"
-      config {
-        src_ip_ranges = ["*"]
+    rule {
+       action   = "deny(403)"
+       priority = "21000"
+       preview = true
+       match {
+         expr {
+           expression = "evaluatePreconfiguredWaf('java-v33-stable', {'sensitivity': 3})"
+         }
+       }
+       description = "Java - OWASP Rule"
+     }
+
+     rule {
+       action   = "deny(403)"
+       priority = "22000"
+       preview = true
+       match {
+         expr {
+           expression = "evaluatePreconfiguredWaf('cve-canary', {'sensitivity': 3})"
+         }
+       }
+       description = "Critical vulnerabilities rule"
+     }
+
+    rule {
+      action   = "throttle"
+      priority = "30000"
+      preview = true
+      rate_limit_options {
+            enforce_on_key = "ALL"
+            conform_action = "allow"
+            exceed_action = "deny(429)"
+            rate_limit_threshold {
+                count = "300"
+                interval_sec = "60" 
+            }
+        }
+      match {
+        versioned_expr = "SRC_IPS_V1"
+        config {
+          src_ip_ranges = ["*"]
+        }
       }
+      description = "Rate limit all user IPs"
     }
-    description = "default rule"
-  }
+
+    rule {
+      action   = "allow"
+      priority = "2147483647"
+      match {
+        versioned_expr = "SRC_IPS_V1"
+        config {
+          src_ip_ranges = ["*"]
+        }
+      }
+      description = "default rule"
+    }
 }
