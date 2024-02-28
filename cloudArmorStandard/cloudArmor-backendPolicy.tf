@@ -230,7 +230,7 @@ resource "google_compute_security_policy" "policy" {
             conform_action = "allow"
             exceed_action = "deny(429)"
             rate_limit_threshold {
-                count = "300"
+                count = "500"
                 interval_sec = "60" 
             }
         }
