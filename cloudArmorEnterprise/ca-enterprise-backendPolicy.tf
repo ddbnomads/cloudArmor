@@ -399,7 +399,7 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('cve-canary', {'sensitivity': 3})"
+        expression = "evaluatePreconfiguredWaf('cve-canary', {'sensitivity':0, 'opt_in_rule_ids': ['owasp-crs-v030001-id044228-cve', 'owasp-crs-v030001-id144228-cve', 'owasp-crs-v030001-id244228-cve', 'owasp-crs-v030001-id344228-cve']})"
       }
     }
 
