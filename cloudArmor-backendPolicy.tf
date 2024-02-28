@@ -84,7 +84,7 @@ resource "google_compute_security_policy" "policy" {
     preview = true
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('sqli-v33-stable', {'sensitivity': 1})"
+        expression = "evaluatePreconfiguredWaf('sqli-v33-stable', {'sensitivity': 2})"
       }
     }
     description = "SQLi - OWASP Rule"
