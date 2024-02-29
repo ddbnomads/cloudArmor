@@ -189,7 +189,7 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
     match {
       expr {
-        expression = "request.method != 'OPTIONS' || request.method != 'POST'"
+        expression = "request.method != 'OPTIONS' || request.method != 'POST' || request.method != 'PATCH'"
       }
     }
 
