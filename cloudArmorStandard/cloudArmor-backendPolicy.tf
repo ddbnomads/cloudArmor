@@ -2,7 +2,7 @@ terraform {
   required_providers {
     google = {
       source = "hashicorp/google"
-      version = "5.22.0"
+      version = "5.32.0"
     }
   }
 }
@@ -17,6 +17,9 @@ resource "google_compute_security_policy" "policy" {
   
   advanced_options_config {
       json_parsing = "STANDARD"
+      json_custom_config {
+        content_types = ["application/json", "application/vnd.api+json", "application/vnd.collection+json", "application/vnd.hyper+json"]
+      }
       log_level= "VERBOSE"
   }
   adaptive_protection_config {
