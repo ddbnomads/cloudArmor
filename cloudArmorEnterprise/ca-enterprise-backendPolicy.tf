@@ -497,6 +497,19 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
     preview  = true
     priority = 8200
   }
+  rule {
+    action      = "deny(403)"
+    description = "Deny request for well-known except cert renewal"
+
+    match {
+      expr {
+        expression = "request.headers['host'].contains('acme-v01.api.letsencrypt.org|acme-v02.api.letsencrypt.org') || origin.asn == 15169 && request.path.lower().urlDecode().contains(\"/.well-known/acme-challenge/|/.well-known/pki-validation/\")"
+      }
+    }
+
+    preview  = true
+    priority = 8210
+  }
 
   rule {
     action      = "deny(403)"
