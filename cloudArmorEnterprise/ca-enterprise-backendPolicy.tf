@@ -503,7 +503,7 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
     match {
       expr {
-        expression = "request.headers['host'].contains('acme-v01.api.letsencrypt.org|acme-v02.api.letsencrypt.org') || origin.asn == 15169 && request.path.lower().urlDecode().contains(\"/.well-known/acme-challenge/|/.well-known/pki-validation/\")"
+        expression = "!request.headers['host'].contains('acme-v01.api.letsencrypt.org|acme-v02.api.letsencrypt.org') || origin.asn != 15169 && request.path.lower().urlDecode().contains(\"/.well-known/acme-challenge/|/.well-known/pki-validation/\")"
       }
     }
 
