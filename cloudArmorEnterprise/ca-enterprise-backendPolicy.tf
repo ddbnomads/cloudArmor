@@ -227,6 +227,276 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
     preview  = true
     priority = 7000
   }
+  rule {
+    action      = "deny(403)"
+    description = "Block /.env prob"
+
+    match {
+      expr {
+        expression = "request.path.lower().urlDecode().contains(\"/.env\")"
+      }
+    }
+
+    preview  = true
+    priority = 8000
+  }
+  rule {
+    action      = "deny(403)"
+    description = "Block S3 Config Probe"
+
+    match {
+      expr {
+        expression = "request.path.lower().urlDecode().contains(\"/.s3cfg\")"
+      }
+    }
+
+    preview  = true
+    priority = 8010
+  }
+  rule {
+    action      = "deny(403)"
+    description = "Exposed Docker YAML file"
+
+    match {
+      expr {
+        expression = "request.path.lower().urlDecode().contains(\"/docker-compose.yml\")"
+      }
+    }
+
+    preview  = true
+    priority = 8020
+  }
+  rule {
+    action      = "deny(403)"
+    description = "Exposed Git YAML file"
+
+    match {
+      expr {
+        expression = "request.path.lower().urlDecode().contains(\"/gitlab-ci.yml\")"
+      }
+    }
+
+    preview  = true
+    priority = 8030
+  }
+  rule {
+    action      = "deny(403)"
+    description = "Disallow Sitemap"
+
+    match {
+      expr {
+        expression = "request.path.lower().urlDecode().contains(\"sitemap.xml\")"
+      }
+    }
+
+    preview  = true
+    priority = 8040
+  }
+  rule {
+    action      = "deny(403)"
+    description = "Disallow JSON Config"
+
+    match {
+      expr {
+        expression = "request.path.lower().urlDecode().contains(\"/config.json\")"
+      }
+    }
+
+    preview  = true
+    priority = 8050
+  }
+  rule {
+    action      = "deny(403)"
+    description = "Disallow info and admin php requests"
+
+    match {
+      expr {
+        expression = "!inIpRange(origin.ip, '9.9.9.0/24') && request.path.lower().urlDecode().contains(\"/info.php\") || request.path.lower().urlDecode().contains(\"/admin/index.php|/phpMyAdmin/index.php\")"
+      }
+    }
+
+    preview  = true
+    priority = 8060
+  }
+  rule {
+    action      = "deny(403)"
+    description = "Disallow Git Config"
+
+    match {
+      expr {
+        expression = "request.path.lower().urlDecode().contains(\"/.git/config\") || request.path.lower().urlDecode().contains(\"/.git/head\")"
+      }
+    }
+
+    preview  = true
+    priority = 8070
+  }
+  rule {
+    action      = "deny(403)"
+    description = "Disallow server status"
+
+    match {
+      expr {
+        expression = "request.path.lower().urlDecode().contains(\"/server-status\")"
+      }
+    }
+
+    preview  = true
+    priority = 8080
+  }
+  rule {
+    action      = "deny(403)"
+    description = "Disallow phpstorm code"
+
+    match {
+      expr {
+        expression = "request.query.lower().urlDecode().contains(\"phpstorm\")"
+      }
+    }
+
+    preview  = true
+    priority = 8090
+  }
+  rule {
+    action      = "deny(403)"
+    description = "WordPress Admin - locked down to IP address"
+
+    match {
+      expr {
+        expression = "!inIpRange(origin.ip, '9.9.9.0/24') && request.path.lower().urlDecode().contains(\"/wp-admin|/login|/admin|/wp-login.php\")"
+      }
+    }
+
+    preview  = true
+    priority = 8100
+  }
+  rule {
+    action      = "deny(403)"
+    description = "WordPress - prevent listing of users"
+
+    match {
+      expr {
+        expression = "!inIpRange(origin.ip, '1.2.3.4/32') && request.query.lower().urlDecode().contains('rest_route=/wp/v2/users/') || request.path.lower().urlDecode().contains('/wp-json/wp/v2/users')"
+      }
+    }
+
+    preview  = true
+    priority = 8110
+  }
+  rule {
+    action      = "deny(403)"
+    description = "Drupal Admin - locked down to IP address"
+
+    match {
+      expr {
+        expression = "!inIpRange(origin.ip, '1.2.3.4/32') && request.query.lower().urlDecode().contains('q=user/login') || request.path.lower().urlDecode().contains('/user/login')"
+        }
+    }
+    preview  = true
+    priority = 8120
+  }
+  rule {
+    action      = "deny(403)"
+    description = "Malware OS Command"
+
+    match {
+      expr {
+        expression = "request.path.lower().urlDecode().contains(\"boaform/admin/formLogin\")"
+      }
+    }
+
+    preview  = true
+    priority = 8130
+  }
+  rule {
+    action      = "deny(403)"
+    description = "Password theft attempt"
+
+    match {
+      expr {
+        expression = "request.path.lower().urlDecode().contains(\"/por/login_psw.csp\")"
+      }
+    }
+
+    preview  = true
+    priority = 8140
+  }
+  rule {
+    action      = "deny(403)"
+    description = "Login attempt over cgi script"
+
+    match {
+      expr {
+        expression = "request.path.lower().urlDecode().contains('/cgi-bin/login.cgi') || request.path.lower().urlDecode().contains('/cgi-bin/WebObjects')"
+      }
+    }
+    preview  = true
+    priority = 8150
+  }
+  rule {
+    action      = "deny(403)"
+    description = "Jenkins Login restricted by IP address"
+
+    match {
+      expr {
+        expression = "!inIpRange(origin.ip, '1.2.3.4/32') && request.path.lower().urlDecode().contains('/user/admin/configure') || request.path.lower().urlDecode().contains('/jenkins/login')"
+      }
+    }
+    preview  = true
+    priority = 8160
+  }
+  rule {
+    action      = "deny(403)"
+    description = "Exchange Logon page restricted by IP address"
+
+    match {
+      expr {
+        expression = "!inIpRange(origin.ip, '9.9.9.0/24') && request.path.lower().urlDecode().contains(\"/exchange/logon.asp\")"
+      }
+    }
+
+    preview  = true
+    priority = 8170
+  }
+  rule {
+    action      = "deny(403)"
+    description = "SSL key theft attempt"
+
+    match {
+      expr {
+        expression = "request.path.lower().urlDecode().contains(\"/.ssl/localhost.key|/.ssh/id_dsa|/.ssh/id_rsa\") || request.path.lower().urlDecode().contains(\"/server.pem|/id_dsa|/id_rsa|/key.pem|/privatekey.key|server.key\")"
+      }
+    }
+
+    preview  = true
+    priority = 8180
+  }
+  rule {
+    action      = "deny(403)"
+    description = "JBoss Admin restricted by IP address"
+
+    match {
+      expr {
+        expression = "!inIpRange(origin.ip, '9.9.9.0/24') && request.path.lower().urlDecode().contains(\"/admin-console/login.seam\")"
+      }
+    }
+
+    preview  = true
+    priority = 8190
+  }
+  rule {
+    action      = "deny(403)"
+    description = "MSFT IIS Login restricted by IP address"
+
+    match {
+      expr {
+        expression = "!inIpRange(origin.ip, '9.9.9.0/24') && request.path.lower().urlDecode().contains(\"/webadmin/default.asp\")"
+      }
+    }
+
+    preview  = true
+    priority = 8200
+  }
 
   rule {
     action      = "deny(403)"
