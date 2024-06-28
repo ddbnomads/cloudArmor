@@ -157,7 +157,7 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
   }
 
   rule {
-    action      = "deny(403)"
+    action      = "allow"
     description = "Threat Intelligence - Search Engines"
 
     match {
@@ -192,7 +192,7 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
     match {
       expr {
-        expression = "request.method != 'OPTIONS' || request.method != 'POST' || request.method != 'PATCH'"
+        expression = "request.method != 'OPTIONS' || request.method != 'POST' || request.method != 'GET'"
       }
     }
 
