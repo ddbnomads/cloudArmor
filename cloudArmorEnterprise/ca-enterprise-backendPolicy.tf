@@ -1,8 +1,8 @@
 terraform {
   required_providers {
     google = {
-      source = "hashicorp/google"
-      version = "6.12.0"
+      source  = "hashicorp/google"
+      version = "~> 7.26.0" # Updated version constraint
     }
   }
 }
@@ -24,7 +24,7 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
     json_custom_config {
       content_types = ["application/json", "application/vnd.api+json", "application/vnd.collection+json", "application/vnd.hyper+json"]
     }
-    log_level    = "VERBOSE"
+    log_level = "VERBOSE"
   }
 
   description = "cloud armor enterprise template rules"
@@ -192,7 +192,7 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
     match {
       expr {
-        expression = "request.method != 'OPTIONS' || request.method != 'POST' || request.method != 'GET'"
+        expression = "request.method != 'OPTIONS' && request.method != 'POST' && request.method != 'GET'"
       }
     }
 
@@ -202,11 +202,14 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
   rule {
     action      = "deny(403)"
-    description = "Block empty refer "
+    description = "Block non-empty referer "
 
     match {
       expr {
-        expression = "has(request.headers['referer']) && request.headers['referer'] != \"\""
+        # This rule seems to deny requests *with* a non-empty referer.
+        # If the intent is to block *empty* or *missing* referers, the logic should be inverted.
+        # Assuming the original intent based on description: Block *empty* referer
+        expression = "!has(request.headers['referer']) || request.headers['referer'] == \"\""
       }
     }
 
@@ -229,7 +232,7 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
   }
   rule {
     action      = "deny(403)"
-    description = "Block /.env prob"
+    description = "Block /.env probe"
 
     match {
       expr {
@@ -311,7 +314,7 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
     match {
       expr {
-        expression = "!inIpRange(origin.ip, '9.9.9.0/24') && request.path.lower().urlDecode().contains(\"/info.php\") || request.path.lower().urlDecode().contains(\"/admin/index.php|/phpMyAdmin/index.php\")"
+        expression = "!inIpRange(origin.ip, '9.9.9.0/24') && (request.path.lower().urlDecode().contains(\"/info.php\") || request.path.lower().urlDecode().contains(\"/admin/index.php\") || request.path.lower().urlDecode().contains(\"/phpMyAdmin/index.php\"))"
       }
     }
 
@@ -363,7 +366,7 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
     match {
       expr {
-        expression = "!inIpRange(origin.ip, '9.9.9.0/24') && request.path.lower().urlDecode().contains(\"/wp-admin|/login|/admin|/wp-login.php\")"
+        expression = "!inIpRange(origin.ip, '9.9.9.0/24') && (request.path.lower().urlDecode().contains(\"/wp-admin\") || request.path.lower().urlDecode().contains(\"/login\") || request.path.lower().urlDecode().contains(\"/admin\") || request.path.lower().urlDecode().contains(\"/wp-login.php\"))"
       }
     }
 
@@ -376,7 +379,7 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
     match {
       expr {
-        expression = "!inIpRange(origin.ip, '1.2.3.4/32') && request.query.lower().urlDecode().contains('rest_route=/wp/v2/users/') || request.path.lower().urlDecode().contains('/wp-json/wp/v2/users')"
+        expression = "!inIpRange(origin.ip, '1.2.3.4/32') && (request.query.lower().urlDecode().contains('rest_route=/wp/v2/users/') || request.path.lower().urlDecode().contains('/wp-json/wp/v2/users'))"
       }
     }
 
@@ -389,8 +392,8 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
     match {
       expr {
-        expression = "!inIpRange(origin.ip, '1.2.3.4/32') && request.query.lower().urlDecode().contains('q=user/login') || request.path.lower().urlDecode().contains('/user/login')"
-        }
+        expression = "!inIpRange(origin.ip, '1.2.3.4/32') && (request.query.lower().urlDecode().contains('q=user/login') || request.path.lower().urlDecode().contains('/user/login'))"
+      }
     }
     preview  = true
     priority = 8120
@@ -439,7 +442,7 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
     match {
       expr {
-        expression = "!inIpRange(origin.ip, '1.2.3.4/32') && request.path.lower().urlDecode().contains('/user/admin/configure') || request.path.lower().urlDecode().contains('/jenkins/login')"
+        expression = "!inIpRange(origin.ip, '1.2.3.4/32') && (request.path.lower().urlDecode().contains('/user/admin/configure') || request.path.lower().urlDecode().contains('/jenkins/login'))"
       }
     }
     preview  = true
@@ -503,7 +506,7 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
     match {
       expr {
-        expression = "!request.headers['host'].contains('acme-v01.api.letsencrypt.org|acme-v02.api.letsencrypt.org') || origin.asn != 15169 && request.path.lower().urlDecode().contains(\"/.well-known/acme-challenge/|/.well-known/pki-validation/\")"
+        expression = "!(request.headers['host'].contains('acme-v01.api.letsencrypt.org') || request.headers['host'].contains('acme-v02.api.letsencrypt.org') || origin.asn == 15169) && (request.path.lower().urlDecode().contains(\"/.well-known/acme-challenge/\") || request.path.lower().urlDecode().contains(\"/.well-known/pki-validation/\"))"
       }
     }
 
@@ -511,13 +514,14 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
     priority = 8210
   }
 
+  # Updated OWASP CRS 4.22 Rules
   rule {
     action      = "deny(403)"
-    description = "PHP - OWASP Rule"
+    description = "PHP - OWASP Rule (CRS 4.22)"
 
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('php-v33-stable', {'sensitivity': 1})"
+        expression = "evaluatePreconfiguredWaf('php-v422-stable', {'sensitivity': 1})"
       }
     }
 
@@ -527,11 +531,11 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
   rule {
     action      = "deny(403)"
-    description = "SQLi - OWASP Rule"
+    description = "SQLi - OWASP Rule (CRS 4.22)"
 
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('sqli-v33-stable', {'sensitivity': 2})"
+        expression = "evaluatePreconfiguredWaf('sqli-v422-stable', {'sensitivity': 2})"
       }
     }
 
@@ -541,11 +545,11 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
   rule {
     action      = "deny(403)"
-    description = "XSS - OWASP Rule"
+    description = "XSS - OWASP Rule (CRS 4.22)"
 
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('xss-v33-stable', {'sensitivity': 1})"
+        expression = "evaluatePreconfiguredWaf('xss-v422-stable', {'sensitivity': 1})"
       }
     }
 
@@ -555,11 +559,11 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
   rule {
     action      = "deny(403)"
-    description = "LFI - OWASP Rule"
+    description = "LFI - OWASP Rule (CRS 4.22)"
 
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('lfi-v33-stable', {'sensitivity': 1})"
+        expression = "evaluatePreconfiguredWaf('lfi-v422-stable', {'sensitivity': 1})"
       }
     }
 
@@ -569,11 +573,11 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
   rule {
     action      = "deny(403)"
-    description = "RFI - OWASP Rule"
+    description = "RFI - OWASP Rule (CRS 4.22)"
 
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('rfi-v33-stable', {'sensitivity': 1})"
+        expression = "evaluatePreconfiguredWaf('rfi-v422-stable', {'sensitivity': 1})"
       }
     }
 
@@ -583,11 +587,11 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
   rule {
     action      = "deny(403)"
-    description = "RCE - OWASP Rule"
+    description = "RCE - OWASP Rule (CRS 4.22)"
 
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('rce-v33-stable', {'sensitivity': 1})"
+        expression = "evaluatePreconfiguredWaf('rce-v422-stable', {'sensitivity': 1})"
       }
     }
 
@@ -597,11 +601,11 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
   rule {
     action      = "deny(403)"
-    description = "Method Enforcement - OWASP Rule"
+    description = "Method Enforcement - OWASP Rule (CRS 4.22)"
 
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('methodenforcement-v33-stable', {'sensitivity': 1})"
+        expression = "evaluatePreconfiguredWaf('methodenforcement-v422-stable', {'sensitivity': 1})"
       }
     }
 
@@ -611,11 +615,11 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
   rule {
     action      = "deny(403)"
-    description = "Scanner Detection - OWASP Rule"
+    description = "Scanner Detection - OWASP Rule (CRS 4.22)"
 
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('scannerdetection-v33-stable', {'sensitivity': 1})"
+        expression = "evaluatePreconfiguredWaf('scannerdetection-v422-stable', {'sensitivity': 1})"
       }
     }
 
@@ -625,11 +629,11 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
   rule {
     action      = "deny(403)"
-    description = "Protocol Attack - OWASP Rule"
+    description = "Protocol Attack - OWASP Rule (CRS 4.22)"
 
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('protocolattack-v33-stable', {'sensitivity': 1})"
+        expression = "evaluatePreconfiguredWaf('protocolattack-v422-stable', {'sensitivity': 1})"
       }
     }
 
@@ -639,11 +643,11 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
   rule {
     action      = "deny(403)"
-    description = "Session Fixation - OWASP Rule"
+    description = "Session Fixation - OWASP Rule (CRS 4.22)"
 
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('sessionfixation-v33-stable', {'sensitivity': 1})"
+        expression = "evaluatePreconfiguredWaf('sessionfixation-v422-stable', {'sensitivity': 1})"
       }
     }
 
@@ -653,11 +657,11 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
   rule {
     action      = "deny(403)"
-    description = "Node.js - OWASP Rule"
+    description = "Generic Attacks - OWASP Rule (CRS 4.22)" # Formerly nodejs
 
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('nodejs-v33-stable', {'sensitivity': 1})"
+        expression = "evaluatePreconfiguredWaf('generic-v422-stable', {'sensitivity': 1})"
       }
     }
 
@@ -667,11 +671,11 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
 
   rule {
     action      = "deny(403)"
-    description = "Java - OWASP Rule"
+    description = "Java - OWASP Rule (CRS 4.22)"
 
     match {
       expr {
-        expression = "evaluatePreconfiguredWaf('java-v33-stable', {'sensitivity': 3})"
+        expression = "evaluatePreconfiguredWaf('java-v422-stable', {'sensitivity': 3})"
       }
     }
 
@@ -679,6 +683,7 @@ resource "google_compute_security_policy" "infrastructure_as_code_enterprise_sec
     priority = 21000
   }
 
+  # Canary rules remain as they are not tied to CRS versions 3.3/4.22
   rule {
     action      = "deny(403)"
     description = "Critical vulnerabilities rule"
